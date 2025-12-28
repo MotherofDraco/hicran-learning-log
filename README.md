@@ -21,3 +21,9 @@ and outputs structured results.
 - Python
 - Algorithmic sequence matching
 - Data analysis & visualization
+
+## Skills Demonstrated
+- Analytical problem solving
+- Algorithmic thinking
+- Data-driven decision making
+- Working with structured data
