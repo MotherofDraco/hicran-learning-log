@@ -1,0 +1,2331 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DNA Similarity Search</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at top, #1e293b 0, #020617 45%, #000 100%);
+            color: #e5e7eb;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            width: 100%;
+            padding: 14px 40px;
+            background: #d1fae5;
+            /* pastel yeşil */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #a7f3d0;
+        }
+
+        .navbar .left {
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .navbar .right a {
+            margin-left: 20px;
+            text-decoration: none;
+            font-size: 14px;
+            color: #047857;
+            font-weight: 500;
+        }
+
+        .page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 780px;
+            background: rgba(15, 23, 42, 0.96);
+            border-radius: 18px;
+            padding: 28px 28px 24px;
+            box-shadow:
+                0 22px 60px rgba(15, 23, 42, 0.9),
+                0 0 0 1px rgba(148, 163, 184, 0.15);
+        }
+
+        .title-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .emoji-pill {
+            width: 34px;
+            height: 34px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at 30% 0, #38bdf8, #1d4ed8);
+            font-size: 18px;
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.6);
+        }
+
+        h1 {
+            font-size: 26px;
+            margin: 0;
+            font-weight: 650;
+            letter-spacing: 0.01em;
+            color: #e5e7eb;
+        }
+
+        .subtitle {
+            margin: 4px 0 18px;
+            font-size: 13px;
+            color: #9ca3af;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #cbd5f5;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 130px;
+            padding: 11px 13px;
+            font-size: 13px;
+            border-radius: 10px;
+            border: 1px solid #1f2937;
+            resize: vertical;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            outline: none;
+            color: #e5e7eb;
+            background: rgba(15, 23, 42, 0.9);
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+        }
+
+        textarea:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.5);
+            background: rgba(15, 23, 42, 0.98);
+        }
+
+        .helper-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 6px;
+            margin-bottom: 16px;
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .helper-row button.example-btn {
+            border: none;
+            background: none;
+            color: #60a5fa;
+            font-size: 11px;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .helper-row button.example-btn:hover {
+            text-decoration: underline;
+        }
+
+        .actions-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .primary-btn {
+            flex: 1;
+            padding: 11px 18px;
+            background: radial-gradient(circle at 30% 0, #4ade80, #22c55e);
+            color: #022c22;
+            border: none;
+            border-radius: 999px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.08s ease, box-shadow 0.18s ease, filter 0.15s ease;
+            box-shadow: 0 14px 30px rgba(34, 197, 94, 0.35);
+        }
+
+        .primary-btn:hover {
+            filter: brightness(1.05);
+            transform: translateY(-1px);
+            box-shadow: 0 18px 40px rgba(34, 197, 94, 0.4);
+        }
+
+        .primary-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 10px 24px rgba(34, 197, 94, 0.32);
+        }
+
+        .primary-btn[disabled] {
+            opacity: 0.6;
+            cursor: default;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .pill-muted {
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            color: #9ca3af;
+            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pill-muted span.dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+            background: #22c55e;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
+        }
+
+        .error-box {
+            margin-top: 6px;
+            margin-bottom: 6px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid #f97373;
+            background: rgba(127, 29, 29, 0.8);
+            color: #fecaca;
+            font-size: 12px;
+            display: none;
+        }
+
+        .loader {
+            display: none;
+            font-size: 11px;
+            color: #9ca3af;
+            margin-bottom: 6px;
+        }
+
+        .loader span.dot {
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            border-radius: 999px;
+            background: #9ca3af;
+            margin-left: 3px;
+            animation: pulse 0.9s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from {
+                opacity: 0.4;
+                transform: translateY(0);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(-1px);
+            }
+        }
+
+        .results-section {
+            margin-top: 18px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 8px;
+        }
+
+        .results-header h2 {
+            font-size: 15px;
+            margin: 0;
+            font-weight: 600;
+            color: #e5e7eb;
+        }
+
+        .results-header span {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .result-box {
+            background: radial-gradient(circle at 0 0, rgba(56, 189, 248, 0.08), rgba(15, 23, 42, 0.98));
+            padding: 11px 12px;
+            margin-bottom: 9px;
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.45);
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .similarity-block {
+            margin-bottom: 20px;
+        }
+
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(4px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .rank {
+            font-size: 12px;
+            font-weight: 600;
+            color: #e5e7eb;
+        }
+
+        .badge-distance {
+            font-size: 11px;
+            padding: 3px 7px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.6);
+            background: rgba(15, 23, 42, 0.9);
+            color: #e5e7eb;
+        }
+
+        .distance-good {
+            border-color: #4ade80;
+            color: #bbf7d0;
+            background: rgba(22, 163, 74, 0.2);
+        }
+
+        .distance-mid {
+            border-color: #facc15;
+            color: #fef9c3;
+            background: rgba(202, 138, 4, 0.2);
+        }
+
+        .distance-bad {
+            border-color: #fb7185;
+            color: #ffe4e6;
+            background: rgba(159, 18, 57, 0.2);
+        }
+
+        .metric-row {
+            font-size: 12px;
+            color: #cbd5f5;
+            margin-bottom: 4px;
+        }
+
+        .sequence-row {
+            font-size: 12px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            color: #e5e7eb;
+            white-space: nowrap;
+            overflow-x: auto;
+            line-height: 1.45;
+        }
+
+        .card-buttons-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .secondary-btn {
+            padding: 5px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.7);
+            background: rgba(15, 23, 42, 0.98);
+            color: #e5e7eb;
+            font-size: 11px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .secondary-btn:hover {
+            background: rgba(30, 64, 175, 0.8);
+        }
+
+        .align-output {
+            margin-top: 8px;
+            padding: 8px;
+            border-radius: 8px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(55, 65, 81, 0.8);
+            font-size: 11px;
+            color: #e5e7eb;
+            overflow-x: auto;
+            white-space: pre-wrap !important;
+            overflow-wrap: anywhere !important;
+        }
+
+        .align-output {
+            padding: 8px 10px;
+            margin-top: 8px;
+            font-size: 12px;
+            line-height: 1.3;
+        }
+
+        .align-output pre {
+            margin: 0;
+            white-space: pre;
+        }
+
+        .alignment-output {
+            line-height: 1.15;
+            font-size: 12px;
+        }
+
+
+        footer {
+            margin-top: 10px;
+            font-size: 11px;
+            color: #6b7280;
+            text-align: center;
+        }
+
+        @media (max-width: 640px) {
+            .card {
+                padding: 22px 18px 20px;
+            }
+
+            .page {
+                padding: 16px;
+            }
+        }
+
+        .viz-box {
+            display: flex;
+            gap: 2px;
+            flex-wrap: wrap;
+            padding: 10px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 10px;
+            margin-top: 12px;
+        }
+
+        .base-block {
+            width: 10px;
+            height: 20px;
+            border-radius: 3px;
+        }
+
+        .base-A {
+            background: #ef4444;
+        }
+
+        .base-C {
+            background: #3b82f6;
+        }
+
+        .base-G {
+            background: #eab308;
+        }
+
+        .base-T {
+            background: #22c55e;
+        }
+
+        .motif-sequence {
+            margin-top: 4px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+
+        .motif-hit {
+            background: rgba(34, 197, 94, 0.25);
+            border-radius: 4px;
+            padding: 1px 2px;
+            animation: motifPulse 1.1s ease-in-out infinite alternate;
+        }
+
+        .motif-hit:hover {
+            background: rgba(74, 222, 128, 0.45);
+            box-shadow: 0 0 14px rgba(34, 197, 94, 0.9);
+            transform: scale(1.08);
+            transition: 0.15s ease-in-out;
+            cursor: pointer;
+        }
+
+        .motif-hit:hover span {
+            color: #ecfdf5;
+            font-weight: 700;
+        }
+
+        @keyframes motifPulse {
+            from {
+                box-shadow: 0 0 0 rgba(34, 197, 94, 0.0);
+                transform: translateY(0);
+            }
+
+            to {
+                box-shadow: 0 0 12px rgba(34, 197, 94, 0.75);
+                transform: translateY(-0.5px);
+            }
+        }
+
+        .motif-track {
+            margin-top: 8px;
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 1px;
+            padding-top: 4px;
+        }
+
+        .motif-block {
+            width: 6px;
+            height: 12px;
+            border-radius: 3px;
+            opacity: 0.5;
+        }
+
+        .motif-block-hit {
+            height: 16px;
+            opacity: 1;
+            box-shadow: 0 0 6px rgba(34, 197, 94, 0.7);
+        }
+
+        .motif-table {
+            border-collapse: collapse;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            font-size: 11px;
+            width: 100%;
+        }
+
+        .motif-table th,
+        .motif-table td {
+            border: 1px solid rgba(148, 163, 184, 0.6);
+            padding: 4px 6px;
+            text-align: center;
+        }
+
+        .motif-table th {
+            background: rgba(15, 23, 42, 0.9);
+            color: #e5e7eb;
+            font-weight: 600;
+        }
+
+        .motif-table tr:nth-child(even) {
+            background: rgba(15, 23, 42, 0.7);
+        }
+
+        .result-box-blue {
+            background: radial-gradient(circle at 20% 0, rgba(56, 189, 248, 0.12), rgba(15, 23, 42, 0.85));
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            border-radius: 14px;
+            padding: 6px 10px;
+            margin-bottom: 14px;
+            box-shadow: 0 10px 24px rgba(56, 189, 248, 0.18);
+            transition: 0.2s ease;
+        }
+
+        .result-box-blue:hover {
+            box-shadow: 0 14px 30px rgba(56, 189, 248, 0.28);
+            transform: translateY(-1px);
+        }
+
+        .result-box-green {
+            padding: 10px 12px;
+            font-size: 13px;
+            line-height: 1.35;
+            margin-top: 8px;
+        }
+
+        .comp-bar {
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 4px;
+            margin-bottom: 10px;
+        }
+
+        .start-codon {
+            background: rgba(34, 197, 94, 0.35);
+            border: 1px solid rgba(34, 197, 94, 0.6);
+            padding: 2px 5px;
+            border-radius: 6px;
+            font-weight: 700;
+            color: #bbf7d0;
+        }
+
+        .stop-codon {
+            background: rgba(239, 68, 68, 0.35);
+            border: 1px solid rgba(239, 68, 68, 0.6);
+            padding: 2px 5px;
+            border-radius: 6px;
+            font-weight: 700;
+            color: #fecaca;
+        }
+
+        .tool-card {
+            margin-top: 26px;
+            padding: 26px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        .long-seq-box {
+            white-space: pre-wrap !important;
+            overflow-wrap: anywhere !important;
+            word-break: break-word !important;
+            font-family: ui-monospace, monospace;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        /* --- Translation visualisation (Set B) --- */
+
+        .translation-card {
+            background: radial-gradient(circle at 10% 0, rgba(56, 189, 248, 0.18), rgba(15, 23, 42, 0.95));
+            border-radius: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            padding: 16px 18px 18px;
+            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.8);
+            font-size: 13px;
+        }
+
+        .translation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 10px;
+        }
+
+        .translation-title {
+            font-weight: 600;
+            color: #e5e7eb;
+        }
+
+        .translation-meta {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .translation-lane {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .lane-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .lane-label {
+            min-width: 80px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #bfdbfe;
+        }
+
+        .lane-seq,
+        .lane-protein {
+            flex: 1;
+        }
+
+        .lane-arrow {
+            text-align: center;
+            font-size: 11px;
+            color: #9ca3af;
+            margin: 2px 0;
+        }
+
+        .codon-block {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 4px;
+            margin: 0 2px 4px 0;
+            border-radius: 6px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(148, 163, 184, 0.5);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 12px;
+            gap: 1px;
+            opacity: 0;
+            transform: translateY(4px);
+            animation: codonStep 0.35s ease-out forwards;
+        }
+
+        .codon-row {
+            line-height: 1.1;
+            margin: 2px 0;
+        }
+
+        @keyframes codonStep {
+            from {
+                opacity: 0;
+                transform: translateY(4px) scale(0.97);
+                box-shadow: 0 0 0 rgba(34, 197, 94, 0);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                box-shadow: 0 0 10px rgba(34, 197, 94, 0.45);
+            }
+        }
+
+        .aa-box {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 26px;
+            padding: 2px 5px;
+            margin: 0 3px 4px 0;
+            border-radius: 8px;
+            border: 1px solid #38bdf8;
+            background: rgba(15, 23, 42, 0.96);
+            font-size: 13px;
+            font-weight: 700;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            opacity: 0;
+            transform: translateY(6px) scale(0.9);
+            animation: aaPop 0.38s cubic-bezier(0.22, 0.9, 0.3, 1.2) forwards;
+        }
+
+        @keyframes aaPop {
+            0% {
+                opacity: 0;
+                transform: translateY(6px) scale(0.9);
+                box-shadow: 0 0 0 rgba(56, 189, 248, 0);
+            }
+
+            60% {
+                opacity: 1;
+                transform: translateY(-1px) scale(1.05);
+                box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                box-shadow: 0 0 6px rgba(56, 189, 248, 0.3);
+            }
+        }
+
+        .align-output pre {
+            margin: 0 0 2px 0 !important;
+            line-height: 1.25 !important;
+        }
+
+        .gc-small {
+            max-height: 120px;
+            overflow-y: auto;
+            padding: 10px 12px !important;
+        }
+
+        .rc-small {
+            max-height: 160px;
+            overflow-y: auto;
+            padding: 10px 12px !important;
+        }
+
+        .motif-small {
+            max-height: 160px;
+            overflow-y: auto;
+            padding: 10px 12px !important;
+        }
+
+        .similarity-bar {
+            height: 6px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.15);
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .similarity-fill {
+            height: 100%;
+            background: linear-gradient(90deg,
+                    #ef4444,
+                    #facc15,
+                    #22c55e);
+        }
+
+        .btn-db {
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            border-radius: 9999px;
+            padding: 10px 18px;
+            font-size: 13px;
+            letter-spacing: 0.2px;
+            color: #0b0f14;
+            background: radial-gradient(circle at 30% 0, #4ade80, #22c55e);
+            position: relative;
+            isolation: isolate;
+            box-shadow: 0 10px 22px rgba(34, 197, 94, 0.16);
+            transition: transform 0.08s ease, box-shadow 0.18s ease, filter 0.15s ease;
+        }
+
+
+        .btn-db::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 120%;
+            height: 180%;
+            transform: translate(-50%, -50%);
+            border-radius: 9999px;
+            background: radial-gradient(circle, rgba(34, 197, 94, .40), rgba(34, 197, 94, 0) 60%);
+            filter: blur(14px);
+            opacity: 0.35;
+            z-index: -1;
+            transition: opacity .18s ease;
+        }
+
+        .btn-db:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.01);
+            box-shadow: 0 12px 24px rgba(34, 197, 94, 0.14);
+        }
+
+        .btn-db:hover::after {
+            opacity: 0.28;
+            /* <<< hover’da daha az */
+        }
+
+        .btn-db:active {
+            transform: translateY(0px);
+            box-shadow: 0 10px 24px rgba(34, 197, 94, 0.22);
+        }
+
+        .btn-mini {
+            width: 180px;
+            padding: 8px 14px;
+            font-size: 12.5px;
+            color: #0b0f14;
+        }
+
+
+        .db-result-box {
+            margin-top: 14px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            backdrop-filter: blur(6px);
+        }
+
+        .db-result-box * {
+            font-family: ui-sans-serif, system-ui, -apple-system, "SF Pro Display", "SF Pro Text",
+                "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+            color: rgba(255, 255, 255, 0.92);
+        }
+
+        #matchMeta div {
+            margin: 2px 0;
+        }
+
+        #matchText {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+
+            white-space: pre;
+            /* satır kırımlarını koru */
+            overflow-x: auto;
+            /* gerekirse yatay scroll ama 80bp ile zaten gerek kalmaz */
+
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        .base-a {
+            color: #60a5fa;
+        }
+
+        /* A */
+        .base-c {
+            color: #f472b6;
+        }
+
+        /* C */
+        .base-g {
+            color: #34d399;
+        }
+
+        /* G */
+        .base-t {
+            color: #facc15;
+        }
+
+        /* T */
+        .base-n {
+            color: #e5e7eb;
+        }
+
+        /* diğer */
+
+        .match-hl {
+            background: rgba(34, 197, 94, 0.12);
+            box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.18) inset;
+            border-radius: 6px;
+            padding: 0 2px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .tab-btn {
+            border: none;
+            cursor: pointer;
+            border-radius: 9999px;
+            padding: 8px 12px;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .tab-btn.active {
+            background: rgba(34, 197, 94, 0.20);
+        }
+
+        .tab-panel {
+            display: none;
+            margin-top: 12px;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        #copyFastaBtn,
+        #downloadFastaBtn {
+            color: #0b0f14 !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <div class="card">
+
+            <!-- 1) DNA Similarity Search -->
+            <div class="title-row">
+                <div class="emoji-pill">🧬</div>
+                <h1>DNA Similarity Search</h1>
+            </div>
+            <p class="subtitle">
+                Paste your DNA sequence and find the closest matches in the demo index.
+            </p>
+
+            <label for="sequenceInput">DNA sequence</label>
+            <textarea id="sequenceInput" placeholder="Enter DNA sequence (A, T, G, C)..."></textarea>
+
+            <div class="helper-row">
+                <span>Only A, C, G, T characters are allowed. Newlines/spaces are ignored.</span>
+                <div class="pill-muted" id="demoPill">
+                    <span class="dot"></span>
+                    Demo index: 5 sequences
+                </div>
+                <button class="example-btn" type="button" onclick="fillExample()">
+                    Use example sequence
+                </button>
+            </div>
+
+            <div class="actions-row">
+                <button id="searchButton" class="primary-btn" type="button" onclick="search()">
+                    Search
+                </button>
+            </div>
+            <div id="errorBox" class="error-box"></div>
+            <div id="loader" class="loader">
+                Searching for similar sequences<span class="dot"></span>
+            </div>
+
+            <div id="results" class="results-section"></div>
+            <div id="dbBox" class="db-result-box" style="margin-top:12px; display:none;">
+                <div id="matchMeta"></div>
+                <pre id="matchText"></pre>
+
+                <div class="db-actions">
+                    <button id="toggleMatchBtn" type="button" class="btn-db-small" style="display:none;">Show full
+                        match</button>
+                    <button id="copyFastaBtn" type="button" class="btn-db-small">Copy FASTA</button>
+                    <button id="downloadFastaBtn" type="button" class="btn-db-small">Download FASTA</button>
+                </div>
+
+                <div class="tab-row">
+                    <button class="tab-btn active" data-tab="tab-distance">Distance</button>
+                    <button class="tab-btn" data-tab="tab-global">Global Align</button>
+                    <button class="tab-btn" data-tab="tab-local">Local Align</button>
+                </div>
+
+                <div id="tab-distance" class="tab-panel active"></div>
+                <div id="tab-global" class="tab-panel"></div>
+                <div id="tab-local" class="tab-panel"></div>
+            </div>
+
+            <!-- 2) Sequence Tools (tek büyük kart) -->
+            <section class="tool-card">
+                <div class="title-row">
+                    <div class="emoji-pill">🔬</div>
+                    <h1>Sequence Tools</h1>
+                </div>
+                <p class="subtitle">
+                    Analyze your DNA sequence with GC-content, reverse complement, motif scanning and codon usage
+                    tools.
+                </p>
+
+                <!-- DNA input for sequence tools -->
+                <label>DNA sequence</label>
+                <textarea id="sequenceToolsInput" placeholder="Enter DNA sequence (A, C, G, T)..."></textarea>
+                <div style="font-size:11px; color:#64748b; margin-top:6px; margin-bottom:12px;">
+                    Only A, C, G, T characters are allowed.
+                </div>
+
+                <!-- Composition panel (JS dolduracak) -->
+                <div id="compositionPanel" class="result-box-blue" style="margin-bottom:16px;"></div>
+
+                <!-- GC-content -->
+                <button id="gcContentBtn" style="
+                    width:100%;
+                    padding:10px 18px;
+                    background: radial-gradient(circle at 30% 0, #4ade80, #22c55e);
+                    color:#022c22;
+                    border:none;
+                    border-radius:14px;
+                    font-size:14px;
+                    font-weight:600;
+                    cursor:pointer;
+                    box-shadow:0 10px 24px rgba(34,197,94,0.32);
+                    margin-bottom:8px;
+                ">
+                    Calculate GC-content
+                </button>
+                <div id="gcResult" class="result-box-blue long-seq-box"></div>
+
+                <!-- Reverse Complement -->
+                <button id="reverseComplementBtn" style="
+                    width:100%;
+                    padding:10px 18px;
+                    background: radial-gradient(circle at 30% 0, #4ade80, #22c55e);
+                    color:#022c22;
+                    border:none;
+                    border-radius:14px;
+                    font-size:14px;
+                    font-weight:600;
+                    cursor:pointer;
+                    box-shadow:0 10px 24px rgba(34,197,94,0.32);
+                    margin-bottom:8px;
+                ">
+                    Calculate Reverse Complement
+                </button>
+                <div id="reverseComplementResult" class="result-box-blue long-seq-box"></div>
+
+                <!-- Codon Usage Analyzer -->
+                <div style="margin-top:20px;">
+                    <label style="font-size:14px; font-weight:600; color:#cbd5f5; display:block;">
+                        Codon Usage Analyzer 🧬
+                    </label>
+                    <button id="codonBtn" style="
+                        width:100%;
+                        margin-top:10px;
+                        padding:10px 18px;
+                        background: radial-gradient(circle at 30% 0, #4ade80, #22c55e);
+                        color:#022c22;
+                        border:none;
+                        border-radius:14px;
+                        font-size:14px;
+                        font-weight:600;
+                        cursor:pointer;
+                        box-shadow:0 10px 24px rgba(34,197,94,0.32);
+                        margin-bottom:8px;
+                    ">
+                        Analyze Codon Usage
+                    </button>
+                    <div id="codonResult" class="long-seq-box" style="padding:12px; border-radius:12px; background:rgba(255,255,255,0.05);
+                            border:1px solid rgba(255,255,255,0.12);"></div>
+                </div>
+
+                <!-- Motif -->
+                <div style="margin-top:16px;">
+                    <label style="font-size:14px; font-weight:600; color:#cbd5f5; display:block;">
+                        Motif (DNA) 🔎
+                    </label>
+                    <input id="motifInput" style="
+                        width:100%;
+                        margin-top:6px;
+                        padding:12px 14px;
+                        border-radius:12px;
+                        background:rgba(255,255,255,0.05);
+                        border:1px solid rgba(255,255,255,0.12);
+                        color:#fff;
+                        font-size:14px;
+                    ">
+                    <button id="motifSearchBtn" style="
+                        width:100%;
+                        margin-top:10px;
+                        padding:10px 18px;
+                        background: radial-gradient(circle at 30% 0, #4ade80, #22c55e);
+                        color:#022c22;
+                        border:none;
+                        border-radius:14px;
+                        font-size:14px;
+                        font-weight:600;
+                        cursor:pointer;
+                        box-shadow:0 10px 24px rgba(34,197,94,0.32);
+                        margin-bottom:8px;
+                    ">
+                        Search Motif
+                    </button>
+                    <div id="motifResult" class="long-seq-box" style="padding:12px; border-radius:12px; background:rgba(255,255,255,0.05);
+                            border:1px solid rgba(255,255,255,0.12);"></div>
+                </div>
+            </section>
+
+            <!-- 3) Translation Tool (ayrı büyük kart, Set B) -->
+            <div style="margin-top:40px;
+                    padding:20px;
+                    border-radius:16px;
+                    background:rgba(255,255,255,0.05);
+                    border:1px solid rgba(255,255,255,0.12);">
+                <section class="mt-10 p-6 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-lg shadow-xl">
+                    <div class="title-row">
+                        <div class="emoji-pill">🧪</div>
+                        <h1>Translation Tool</h1>
+                    </div>
+                    <p class="subtitle">
+                        Convert coding DNA to RNA and protein with color-coded amino acids.
+                    </p>
+
+                    <label for="translationInput">Coding DNA sequence (5' → 3')</label>
+                    <textarea id="translationInput" placeholder="Enter coding DNA sequence (A, T, G, C)..."></textarea>
+
+                    <div class="helper-row">
+                        <span>
+                            Only A, C, G, T characters are allowed. Length should be a multiple of 3 for complete
+                            codons.
+                        </span>
+                    </div>
+
+                    <div class="actions-row">
+                        <button id="translationBtn" class="primary-btn" type="button">
+                            Translate DNA → RNA → Protein
+                        </button>
+                    </div>
+
+                    <!-- Sonuç kutusu: başlangıçta gizli, JS ile dolduruluyor -->
+                    <div id="translationResult" style="display:none;"></div>
+                </section>
+
+                <footer>
+                    © 2025 DNA Similarity Tool · Built by Hicran Bağ
+                </footer>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --------------------------
+        // DNA Similarity Search
+        // --------------------------
+        let lastResults = [];
+        let lastQuery = "";
+        let expanded = new Set();
+
+        function showError(msg) {
+            const box = document.getElementById("errorBox");
+            box.textContent = msg;
+            box.style.display = "block";
+        }
+
+        function clearError() {
+            const box = document.getElementById("errorBox");
+            box.textContent = "";
+            box.style.display = "none";
+        }
+
+        function setLoading(isLoading) {
+            const btn = document.getElementById("searchButton");
+            const loader = document.getElementById("loader");
+            btn.disabled = isLoading;
+            loader.style.display = isLoading ? "block" : "none";
+            btn.textContent = isLoading ? "Searching..." : "Search";
+        }
+
+        function fillExample() {
+            const example = "ATGCGTACGTAGCTAGCTAG";
+            document.getElementById("sequenceInput").value = example;
+            clearError();
+        }
+
+        function classifyDistance(d) {
+            if (d <= 1.0) return "distance-good";
+            if (d <= 3.0) return "distance-mid";
+            return "distance-bad";
+        }
+
+        function wrapSequence(seq, lineLength = 80) {
+            return seq.match(new RegExp(`.{1,${lineLength}}`, 'g')).join("<br>");
+        }
+
+        async function search() {
+            clearError();
+
+            const rawSeq = document.getElementById("sequenceInput").value;
+            const seqNoSpaces = rawSeq.replace(/\s/g, "");
+            if (!seqNoSpaces) {
+                showError("Please enter something.");
+                return;
+            }
+
+            if (/[^ACGTacgt]/.test(seqNoSpaces)) {
+                showError("Invalid characters. Only A, C, G, T are allowed.");
+                return;
+            }
+
+            if (seqNoSpaces.length < 8) {
+                showError("Sequence too short. Minimum length is 8.");
+                return;
+            }
+
+            const seq = seqNoSpaces.toUpperCase();
+            lastQuery = seq;
+
+            setLoading(true);
+
+            try {
+                const response = await fetch("http://127.0.0.1:8000/search", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ sequence: seq })
+                });
+
+                if (!response.ok) {
+                    showError("Search request failed.");
+                    setLoading(false);
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (!data.found || !data.results || data.results.length === 0) {
+                    showError("No match found in FASTA database.");
+                    return;
+                }
+
+                renderResults(data.results);
+
+            } catch (err) {
+                console.error(err);
+                showError("An error occurred while searching.");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        let lastResult = null;
+        let showFull = false;
+
+        function formatSequenceLines(seq, width = 80) {
+            if (!seq) return "";
+            const s = seq.replace(/\s/g, "");
+            let out = "";
+            for (let i = 0; i < s.length; i += width) {
+                out += s.slice(i, i + width) + "\n";
+            }
+            return out.trimEnd();
+        }
+
+        function renderDbSearchResult(result) {
+
+            lastResult = result;
+            showFull = false;
+
+            document.getElementById("matchMeta").innerHTML = `
+    <div><b>Record:</b> ${result.matched_record_id || "-"}</div>
+    <div><b>Organism:</b> ${result.organism || "-"}</div>
+    <div><b>Gene:</b> ${result.gene_name || "-"}</div>
+    <div><b>Similarity:</b> ${(result.similarity * 100).toFixed(2)}%</div>
+    <div><b>Range:</b> ${result.start}–${result.end}</div>
+  `;
+
+            document.getElementById("matchText").innerHTML = formatColoredSequence(result.match_preview, 80);
+
+            const btn = document.getElementById("toggleMatchBtn");
+            btn.style.display = "inline-block";
+            btn.textContent = "Show full match";
+        }
+        function chunkString(s, width = 80) {
+            const clean = (s || "").replace(/\s/g, "");
+            const lines = [];
+            for (let i = 0; i < clean.length; i += width) {
+                lines.push(clean.slice(i, i + width));
+            }
+            return lines;
+        }
+
+        function colorizeLine(line) {
+            return line.split("").map(ch => {
+                const base = ch.toUpperCase();
+                let cls = "base-n";
+                if (base === "A") cls = "base-a";
+                else if (base === "C") cls = "base-c";
+                else if (base === "G") cls = "base-g";
+                else if (base === "T") cls = "base-t";
+                return `<span class="${cls}">${ch}</span>`;
+            }).join("");
+        }
+
+        function formatColoredSequence(seq, width = 80) {
+            const lines = chunkString(seq, width);
+            return lines.map(colorizeLine).join("\n");
+        }
+
+        function renderResults(results) {
+            lastResults = results;
+
+            const container = document.getElementById("results");
+            container.innerHTML = "";
+
+            results.forEach((r, idx) => {
+                const isOpen = expanded.has(idx);
+
+                container.innerHTML += `
+      <div class="db-result-box result-card" data-idx="${idx}">
+        <div class="meta">
+          <div><b>Record:</b> ${r.matched_record_id || "-"}</div>
+          <div><b>Organism:</b> ${r.organism || "-"}</div>
+          <div><b>Gene:</b> ${r.gene_name || "-"}</div>
+          <div><b>Similarity:</b> ${(r.similarity * 100).toFixed(2)}%</div>
+          <div><b>Range:</b> ${r.start}–${r.end}</div>
+        </div>
+
+        <pre class="match-pre" id="match-${idx}">${isOpen ? formatColoredSequence(r.match_full, 80)
+                        : formatColoredSequence(r.match_preview, 80)
+                    }</pre>
+
+        <div class="btn-row">
+          <button class="btn-mini btn-green js-toggle" data-idx="${idx}">
+            ${isOpen ? "Hide details" : "Show details"}
+          </button>
+
+          <button class="btn-mini btn-green js-copy" data-idx="${idx}">Copy FASTA</button>
+          <button class="btn-mini btn-green js-download" data-idx="${idx}">Download FASTA</button>
+
+          <button class="btn-mini btn-dark js-distance" data-idx="${idx}">Distance</button>
+          <button class="btn-mini btn-dark js-global" data-idx="${idx}">Align (Global)</button>
+          <button class="btn-mini btn-dark js-local" data-idx="${idx}">Align (Local)</button>
+        </div>
+
+        <div class="tabs-wrap">
+          <div class="tab-panel" id="panel-${idx}" style="display:none;">
+            <pre class="align-pre" id="out-${idx}"></pre>
+          </div>
+        </div>
+      </div>
+    `;
+            });
+        }
+
+        document.getElementById("toggleMatchBtn").addEventListener("click", () => {
+            if (!lastResult) return;
+            showFull = !showFull;
+            const seq = showFull
+                ? lastResult.match_full
+                : lastResult.match_preview;
+            document.getElementById("matchText").innerHTML =
+                formatColoredSequence(seq, 80);
+
+            document.getElementById("toggleMatchBtn").textContent =
+                showFull ? "Show preview" : "Show full match";
+        });
+
+        function colorizeSequence(seq) {
+            const colors = {
+                "A": "#60a5fa",  // blue
+                "C": "#f472b6",  // pink
+                "G": "#34d399",  // green
+                "T": "#facc15",  // yellow,
+                "-": "#9ca3af"
+            };
+            return seq
+                .split("")
+                .map(base => {
+                    const color = colors[base] || "#e5e7eb";
+                    return `<span style="color:${color}">${base}</span>`;
+                })
+                .join("");
+        }
+
+        function formatColoredHighlightedSequence(seq, width = 80) {
+            const clean = (seq || "").replace(/\s/g, "");
+            const lines = [];
+            for (let i = 0; i < clean.length; i += width) {
+                const line = clean.slice(i, i + width);
+                const colored = line.split("").map(ch => {
+                    const b = ch.toUpperCase();
+                    let cls = "base-n";
+                    if (b === "A") cls = "base-a";
+                    else if (b === "C") cls = "base-c";
+                    else if (b === "G") cls = "base-g";
+                    else if (b === "T") cls = "base-t";
+                    return `<span class="${cls}">${ch}</span>`;
+                }).join("");
+                lines.push(`<span class="match-hl">${colored}</span>`);
+            }
+            return lines.join("\n");
+        }
+
+        function makeFasta(header, seq, width = 80) {
+            const lines = chunkString(seq, width);
+            return `>${header}\n` + lines.join("\n") + "\n";
+        }
+
+        document.getElementById("copyFastaBtn").addEventListener("click", async () => {
+            if (!lastResult) return;
+            const header = lastResult.description || lastResult.matched_record_id || "record";
+            const fasta = makeFasta(header, showFull ? lastResult.match_full : lastResult.match_preview);
+            await navigator.clipboard.writeText(fasta);
+        });
+
+        document.getElementById("downloadFastaBtn").addEventListener("click", () => {
+            if (!lastResult) return;
+            const header = (lastResult.matched_record_id || "record").replace(/[^\w.-]/g, "_");
+            const fasta = makeFasta(lastResult.description || lastResult.matched_record_id, lastResult.match_full);
+            const blob = new Blob([fasta], { type: "text/plain" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = `${header}.fasta`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        });
+
+        document.addEventListener("click", (e) => {
+            const btn = e.target.closest(".tab-btn");
+            if (!btn) return;
+
+            // butonları pasifleştir
+            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+            document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+
+            // seçileni aktif et
+            btn.classList.add("active");
+            const panelId = btn.dataset.tab;
+            const panel = document.getElementById(panelId);
+            if (panel) panel.classList.add("active");
+        });
+
+        function renderResults() {
+            const container = document.getElementById("results");
+            container.innerHTML = "";
+
+            if (!lastResults.length) {
+                container.innerHTML = "<p style='font-size:12px; color:#9ca3af;'>No matches found.</p>";
+                return;
+            }
+
+            let html = `
+            <div class="results-header">
+                <h2>Top matches</h2>
+                <span>${lastResults.length} result(s)</span>
+            </div>
+        `;
+
+            lastResults.forEach((item, idx) => {
+                const distanceClass = classifyDistance(item.distance);
+                const detailsId = `details-${idx}`;
+                const globalId = `align-global-${idx}`;
+                const localId = `align-local-${idx}`;
+
+                html += `
+                <div class="result-box">
+                    <div class="result-top-row">
+                        <span class="rank">Match #${item.rank}</span>
+                        <span class="badge-distance ${distanceClass}">
+                            Distance: ${item.distance}
+                            <div class="similarity-text">
+                              Similarity: ${(item.similarity * 100).toFixed(1)}%
+                            </div>
+                        </span>
+    
+                    </div>
+                    <div class="metric-row">
+                        Approx. similarity (lower distance ≈ closer)
+                    </div>
+                    <div class="sequence-row">
+                      ${wrapSequence(item.sequence, 80)
+                        .split("<br>")
+                        .map(line => colorizeSequence(line))
+                        .join("<br>")}
+                    </div>
+
+                    <div class="card-buttons-row">
+                        <button class="secondary-btn" type="button"
+                                onclick="toggleDetails('${detailsId}')">
+                            Show / Hide details 
+                        </button>
+                        <button class="secondary-btn" type="button"
+                                onclick="alignGlobal(${idx}, '${globalId}')">
+                            Align (global)
+                        </button>
+                        <button class="secondary-btn" type="button"
+                                onclick="alignLocal(${idx}, '${localId}')">
+                            Align (local)
+                        </button>
+                    </div>
+
+                    <div id="${detailsId}" class="align-output" style="display:none;">
+                        <pre>Query:\n${wrapSequence(lastQuery, 80)}</pre>
+                        <pre>Match:\n${wrapSequence(item.sequence, 80)}</pre>
+                    </div>
+                    <div id="${globalId}" class="align-output" style="display:none;"></div>
+                    <div id="${localId}" class="align-output" style="display:none;"></div>
+                </div>
+            `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function toggleDetails(id) {
+            const box = document.getElementById(id);
+            if (!box) return;
+            if (box.style.display === "none" || box.style.display === "") {
+                box.style.display = "block"; //sadece details kutusunu gösterir.
+            } else {
+                box.style.display = "none"; //sadece details kutusunu gizler.
+            }
+        }
+
+        function formatAlignmentColored(alnText) {
+            const lines = alnText.trim().split("\n");
+            if (lines.length < 3) return alnText;
+
+            const seq1 = colorizeSequence(lines[0]);
+            const matchLine = `<span style="color:#9ca3af">${lines[1]}</span>`;
+            const seq2 = colorizeSequence(lines[2]);
+            const scoreLine = lines[3]
+                ? `<div style="margin-top:4px; color:#9ca3af;">${lines[3]}</div>`
+                : "";
+
+            return `
+            <div style="font-family:monospace; white-space:pre;">
+                ${seq1}<br>
+                ${matchLine}<br>
+                ${seq2}
+                ${scoreLine}
+            </div>
+        `;
+        }
+
+        async function alignGlobal(index, alignBoxId) {
+            const alignBox = document.getElementById(alignBoxId);
+            if (!alignBox) return;
+
+            const seq1 = lastQuery;
+            const target = lastResults[index];
+            if (!target) {
+                showError("Selected result not found.");
+                return;
+            }
+            const seq2 = target.sequence;
+
+            alignBox.style.display = "block";
+            alignBox.innerHTML = "<pre>Aligning (global)...</pre>";
+
+            try {
+                const response = await fetch("http://127.0.0.1:8000/align-global", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ seq1, seq2 })
+                });
+
+                if (!response.ok) throw new Error("Align request failed");
+
+                const data = await response.json();
+                const text = data.alignment || "No alignment returned.";
+                alignBox.innerHTML = formatAlignmentColored(text);
+            } catch (err) {
+                console.error(err);
+                alignBox.innerHTML = "<pre>Error while aligning.</pre>";
+            }
+        }
+
+        async function alignLocal(index, alignBoxId) {
+            const alignBox = document.getElementById(alignBoxId);
+            if (!alignBox) return;
+
+            const seq1 = lastQuery;
+            const target = lastResults[index];
+            if (!target) {
+                showError("Selected result not found.");
+                return;
+            }
+            const seq2 = target.sequence;
+
+            alignBox.style.display = "block";
+            alignBox.innerHTML = "<pre>Aligning (local)...</pre>";
+
+            try {
+                const response = await fetch("http://127.0.0.1:8000/align-local", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ seq1, seq2 })
+                });
+
+                if (!response.ok) throw new Error("Align request failed");
+
+                const data = await response.json();
+                const text = data.alignment || "No alignment returned.";
+                alignBox.innerHTML = formatAlignmentColored(text);
+            } catch (err) {
+                console.error(err);
+                alignBox.innerHTML = "<pre>Error while aligning (local).</pre>";
+            }
+        }
+
+        // --------------------------
+        // General helpers
+        // --------------------------
+        function cleanSequence(seq) {
+            if (!seq) return "";
+            return seq.toUpperCase().replace(/[^ACGT]/g, "");
+        }
+
+        function baseColor(base) {
+            switch (base) {
+                case "A": return "#60a5fa"; // blue
+                case "C": return "#f472b6"; // pink
+                case "G": return "#34d399"; // green
+                case "T": return "#facc15"; // yellow
+                default: return "#e5e7eb";
+            }
+        }
+
+        // --------------------------
+        // Composition & GC-content
+        // --------------------------
+        function calculateGCContent(seq) {
+            const cleaned = cleanSequence(seq);
+            if (!cleaned) return null;
+
+            const length = cleaned.length;
+            let gcCount = 0;
+            for (let i = 0; i < cleaned.length; i++) {
+                const base = cleaned[i];
+                if (base === "G" || base === "C") gcCount++;
+            }
+            const gcPercentage = (gcCount / length) * 100;
+
+            return { length, gcCount, gcPercentage };
+        }
+
+        function updateCompositionPanel(seq) {
+            const cleaned = cleanSequence(seq);
+            const panel = document.getElementById("compositionPanel");
+            if (!panel) return;
+
+            if (!cleaned) {
+                panel.innerHTML = `
+                <p style="color:#9ca3af; font-size:13px; margin:0;">
+                    Enter a valid DNA sequence to see composition.
+                </p>
+            `;
+                return;
+            }
+
+            const length = cleaned.length;
+            const counts = { A: 0, C: 0, G: 0, T: 0 };
+            for (let base of cleaned) counts[base]++;
+
+            const percent = {
+                A: (counts.A / length * 100).toFixed(2),
+                C: (counts.C / length * 100).toFixed(2),
+                G: (counts.G / length * 100).toFixed(2),
+                T: (counts.T / length * 100).toFixed(2),
+            };
+
+            panel.innerHTML = `
+            <div style="font-size:14px; font-weight:600; margin-bottom:6px; color:#e5e7eb;">
+                📊 Composition Overview
+            </div>
+            <div style="font-size:13px; color:#cbd5f5; margin-bottom:10px;">
+                Total length: <b>${length} bp</b>
+            </div>
+            <div style="font-size:12px;">
+                <div>A: ${counts.A} (${percent.A}%)</div>
+                <div class="comp-bar" style="background:#60a5fa; width:${percent.A}%"></div>
+
+                <div>C: ${counts.C} (${percent.C}%)</div>
+                <div class="comp-bar" style="background:#f472b6; width:${percent.C}%"></div>
+
+                <div>G: ${counts.G} (${percent.G}%)</div>
+                <div class="comp-bar" style="background:#34d399; width:${percent.G}%"></div>
+
+                <div>T: ${counts.T} (${percent.T}%)</div>
+                <div class="comp-bar" style="background:#facc15; width:${percent.T}%"></div>
+            </div>
+        `;
+        }
+
+        function reverseComplement(seq) {
+            const cleaned = cleanSequence(seq);
+            const complementMap = { A: "T", T: "A", C: "G", G: "C" };
+            let revComp = "";
+            for (let i = cleaned.length - 1; i >= 0; i--) {
+                const base = cleaned[i];
+                revComp += complementMap[base] || "N";
+            }
+            return revComp;
+        }
+
+        function runGc() {
+            const seqInput = document.getElementById("sequenceToolsInput");
+            const gcResultDiv = document.getElementById("gcResult");
+            if (!seqInput || !gcResultDiv) return;
+
+            const result = calculateGCContent(seqInput.value);
+            if (!result) {
+                gcResultDiv.innerHTML = `<div>Please enter a valid DNA sequence.</div>`;
+                return;
+            }
+
+            const percentage = result.gcPercentage.toFixed(2);
+            gcResultDiv.innerHTML = `<div class="gc-small">
+            <div>
+                <strong>GC-content analysis</strong><br>
+                Length: ${result.length} bp<br>
+                GC count: ${result.gcCount}<br>
+                GC content: ${percentage}%
+                <div style="
+                    margin-top:6px;
+                    height:10px;
+                    width:100%;
+                    background:rgba(255,255,255,0.08);
+                    border-radius:6px;
+                    overflow:hidden;
+                ">
+                    <div style="
+                        width:${percentage}%;
+                        height:100%;
+                        background:linear-gradient(to right, #4ade80, #22c55e);
+                    "></div>
+                </div>
+            </div>
+        `;
+        }
+
+        function runRc() {
+            const seqInput = document.getElementById("sequenceToolsInput");
+            const rcResultDiv = document.getElementById("reverseComplementResult");
+            if (!seqInput || !rcResultDiv) return;
+
+            const rc = reverseComplement(seqInput.value);
+            if (!rc) {
+                rcResultDiv.innerHTML = `<div>Please enter a valid DNA sequence.</div>`;
+                return;
+            }
+
+            const coloredRC = rc.split("")
+                .map(base => `<span style="color:${baseColor(base)}; font-weight:600;">${base}</span>`)
+                .join("");
+
+            rcResultDiv.innerHTML = `<div class="rc-small">
+            <div>
+                <strong>Reverse Complement</strong><br>
+                <div style="margin-top:4px; font-family:monospace; font-size:14px;">
+                    ${coloredRC}
+                </div>
+            </div>
+        `;
+        }
+
+        // --------------------------
+        // Motif Search (highlight + track + table)
+        // --------------------------
+        function motifSearch(seq, motif) {
+            const sequence = cleanSequence(seq);
+            const pattern = cleanSequence(motif);
+            if (!sequence || !pattern) return [];
+
+            const positions = [];
+            const n = sequence.length;
+            const m = pattern.length;
+
+            if (m === 0 || m > n) return positions;
+
+            for (let i = 0; i <= n - m; i++) {
+                if (sequence.slice(i, i + m) === pattern) {
+                    positions.push(i + 1); // 1-based
+                }
+            }
+            return positions;
+        }
+
+        function buildMotifHighlightHTML(seq, motif) {
+            const sequence = cleanSequence(seq);
+            const pattern = cleanSequence(motif);
+            if (!sequence || !pattern) return "";
+
+            let html = "";
+            const m = pattern.length;
+            let i = 0;
+
+            while (i < sequence.length) {
+                if (sequence.slice(i, i + m) === pattern) {
+                    const chunk = sequence
+                        .slice(i, i + m)
+                        .split("")
+                        .map(base => {
+                            const color = baseColor(base);
+                            return `<span style="color:${color}; font-weight:600;">${base}</span>`;
+                        })
+                        .join("");
+
+                    html += `<span class="motif-hit">${chunk}</span>`;
+                    i += m;
+                } else {
+                    const base = sequence[i];
+                    const color = baseColor(base);
+                    html += `<span style="color:${color};">${base}</span>`;
+                    i++;
+                }
+            }
+
+            return `<div class="motif-sequence">${html}</div>`;
+        }
+
+        function buildMotifTrackHTML(seq, motif) {
+            const sequence = cleanSequence(seq);
+            const pattern = cleanSequence(motif);
+            if (!sequence || !pattern) return "";
+
+            const m = pattern.length;
+            const hits = [];
+
+            for (let i = 0; i <= sequence.length - m; i++) {
+                if (sequence.slice(i, i + m) === pattern) {
+                    hits.push({ start: i, end: i + m - 1 });
+                }
+            }
+
+            let blocks = "";
+            for (let i = 0; i < sequence.length; i++) {
+                const base = sequence[i];
+                const color = baseColor(base);
+                const isHit = hits.some(h => i >= h.start && i <= h.end);
+                blocks += `<div class="motif-block${isHit ? " motif-block-hit" : ""}" style="background:${color};"></div>`;
+            }
+
+            return `<div class="motif-track">${blocks}</div>`;
+        }
+
+        function buildMotifTableHTML(motif, positions) {
+            const m = cleanSequence(motif).length;
+            let rows = positions
+                .map((pos, idx) => {
+                    const start = pos;
+                    const end = pos + m - 1;
+                    return `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td>${start}</td>
+                        <td>${end}</td>
+                    </tr>`;
+                })
+                .join("");
+
+            return `
+            <table class="motif-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Start</th>
+                        <th>End</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows}
+                </tbody>
+            </table>
+        `;
+        }
+
+        function runMotif() {
+            const seqInput = document.getElementById("sequenceToolsInput");
+            const motifInput = document.getElementById("motifInput");
+            const motifResultDiv = document.getElementById("motifResult");
+            if (!seqInput || !motifInput || !motifResultDiv) return;
+
+            const seq = seqInput.value;
+            const motif = motifInput.value;
+
+            if (!seq || !cleanSequence(seq)) {
+                motifResultDiv.innerHTML = `<p style="color:#f87171;">Please enter a valid DNA sequence (A, C, G, T).</p>`;
+                return;
+            }
+            if (!motif || !cleanSequence(motif)) {
+                motifResultDiv.innerHTML = `<p style="color:#f97316;">Please enter a motif to search.</p>`;
+                return;
+            }
+
+            const positions = motifSearch(seq, motif);
+            if (positions.length === 0) {
+                motifResultDiv.innerHTML = `<p style="color:#f87171;">Motif not found.</p>`;
+                return;
+            }
+
+            const highlighted = buildMotifHighlightHTML(seq, motif);
+            const track = buildMotifTrackHTML(seq, motif);
+            const table = buildMotifTableHTML(motif, positions);
+
+            motifResultDiv.innerHTML = `
+            <p style="font-size:13px; margin-bottom:6px; color:#9ca3af;">
+                Motif found ${positions.length} time(s). Positions: ${positions.join(", ")}
+            </p>
+            ${highlighted}
+            ${track}
+            ${table}
+        `;
+        }
+
+        // --------------------------
+        // Codon usage
+        // --------------------------
+        function analyzeCodons(seq) {
+            const s = cleanSequence(seq);
+            if (s.length < 3) return null;
+
+            const codonCounts = {};
+            const totalCodons = Math.floor(s.length / 3);
+
+            for (let i = 0; i <= s.length - 3; i += 3) {
+                const codon = s.slice(i, i + 3);
+                if (!/^[ACGT]{3}$/.test(codon)) continue;
+                codonCounts[codon] = (codonCounts[codon] || 0) + 1;
+            }
+
+            return { totalCodons, codonCounts };
+        }
+
+        function highlightCodon(codon) {
+            const start = "ATG";
+            const stops = ["TAA", "TAG", "TGA"];
+
+            if (codon === start) {
+                return `<span style="color:#4ade80; font-weight:700; text-shadow:0 0 6px #4ade80;">${codon}</span>`;
+            }
+            if (stops.includes(codon)) {
+                return `<span style="color:#f87171; font-weight:700; text-shadow:0 0 6px #f87171;">${codon}</span>`;
+            }
+            return `<span style="color:#60a5fa;">${codon}</span>`;
+        }
+
+        function buildCodonTable(counts) {
+            const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+
+            let rows = entries.map(([codon, count]) => {
+                return `
+                <tr>
+                    <td>${highlightCodon(codon)}</td>
+                    <td>${count}</td>
+                    <td>
+                        <div style="background:#1e293b; border-radius:6px; width:100%; height:8px;">
+                            <div style="
+                                width:${count * 18}px;
+                                background:#38bdf8;
+                                height:8px;
+                                border-radius:6px;">
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            }).join("");
+
+            return `
+            <table style="width:100%; font-size:12px; margin-top:10px; border-collapse:collapse;"> 
+                <thead>
+                    <tr style="text-align:left; color:#9ca3af;">
+                        <th>Codon</th>
+                        <th>Count</th>
+                        <th>Visualization</th>
+                    </tr>
+                </thead>
+                <tbody style="color:#e5e7eb;">
+                    ${rows}
+                </tbody>
+            </table>
+        `;
+        }
+
+        function runCodonAnalysis() {
+            const seqInput = document.getElementById("sequenceToolsInput");
+            const codonResult = document.getElementById("codonResult");
+            if (!seqInput || !codonResult) return;
+
+            const result = analyzeCodons(seqInput.value);
+            if (!result) {
+                codonResult.innerHTML = `<p style="color:#f87171;">Sequence too short.</p>`;
+                return;
+            }
+
+            codonResult.innerHTML = `
+            <p style="font-size:13px; color:#9ca3af; text-align:left;">
+                Total codons: ${result.totalCodons}
+            </p>
+            ${buildCodonTable(result.codonCounts)}
+        `;
+        }
+
+        // --------------------------
+        // Translation Tool (Set B)
+        // --------------------------
+        function dnaToRna(seq) {
+            const dna = cleanSequence(seq);
+            return dna.replace(/T/g, "U");
+        }
+
+        const CODON_TABLE = {
+            UUU: "F", UUC: "F",
+            UUA: "L", UUG: "L",
+            CUU: "L", CUC: "L", CUA: "L", CUG: "L",
+            AUU: "I", AUC: "I", AUA: "I",
+            AUG: "M",
+            GUU: "V", GUC: "V", GUA: "V", GUG: "V",
+            UCU: "S", UCC: "S", UCA: "S", UCG: "S",
+            CCU: "P", CCC: "P", CCA: "P", CCG: "P",
+            ACU: "T", ACC: "T", ACA: "T", ACG: "T",
+            GCU: "A", GCC: "A", GCA: "A", GCG: "A",
+            UAU: "Y", UAC: "Y",
+            UAA: "*", UAG: "*",
+            CAU: "H", CAC: "H",
+            CAA: "Q", CAG: "Q",
+            AAU: "N", AAC: "N",
+            AAA: "K", AAG: "K",
+            GAU: "D", GAC: "D",
+            GAA: "E", GAG: "E",
+            UGU: "C", UGC: "C",
+            UGA: "*",
+            UGG: "W",
+            CGU: "R", CGC: "R", CGA: "R", CGG: "R",
+            AGU: "S", AGC: "S",
+            AGA: "R", AGG: "R",
+            GGU: "G", GGC: "G", GGA: "G", GGG: "G"
+        };
+
+        function rnaToProtein(rna) {
+            const clean = rna.replace(/[^ACGU]/g, "");
+            let protein = "";
+            for (let i = 0; i <= clean.length - 3; i += 3) {
+                const codon = clean.slice(i, i + 3);
+                const aa = CODON_TABLE[codon] || "?";
+                if (aa === "*") {
+                    protein += "*";
+                    break;
+                }
+                protein += aa;
+            }
+            return protein;
+        }
+
+        function aaColor(aa) {
+            const hydrophobic = "AILMVFWY";
+            const polar = "STNQ";
+            const positive = "KRH";
+            const negative = "DE";
+
+            if (hydrophobic.includes(aa)) return "#22c55e";   // green
+            if (polar.includes(aa)) return "#38bdf8";        // blue
+            if (positive.includes(aa)) return "#a855f7";     // purple
+            if (negative.includes(aa)) return "#f97316";     // orange
+            if (aa === "*") return "#ef4444";                // stop
+            return "#e5e7eb";
+        }
+
+        function splitIntoCodons(seq) {
+            const list = [];
+            for (let i = 0; i <= seq.length - 3; i += 3) {
+                list.push(seq.slice(i, i + 3));
+            }
+            return list;
+        }
+
+        function buildCodonBlock(codon, index, kind) {
+            const letters = codon.split("")
+                .map(b => `<span style="color:${baseColor(b)}">${b}</span>`)
+                .join("");
+
+            const delay = (index * 0.18).toFixed(2);
+            return `<span class="codon-block codon-${kind}" style="animation-delay:${delay}s;">${letters}</span>`;
+        }
+
+        function buildAaBox(aa, index, offset) {
+            const color = aaColor(aa);
+            const label = (aa === "*") ? "Stop" : aa;
+            const delay = (offset + index * 0.18).toFixed(2);
+
+            return `<span class="aa-box"
+                 style="border-color:${color}; color:${color}; animation-delay:${delay}s;">
+                 ${label}
+            </span>`;
+        }
+
+        function runTranslation() {
+            const inputEl = document.getElementById("translationInput");
+            const resultEl = document.getElementById("translationResult");
+            if (!inputEl || !resultEl) return;
+
+            const raw = inputEl.value || "";
+            const dna = cleanSequence(raw);
+
+            resultEl.style.display = "block";
+
+            if (!dna) {
+                resultEl.innerHTML = `
+                <p style="color:#f87171; font-size:13px;">
+                    Please enter a valid coding DNA sequence (A, C, G, T).
+                </p>`;
+                return;
+            }
+
+            const rnaFull = dnaToRna(dna);
+
+            let startIndex = rnaFull.indexOf("AUG");
+            if (startIndex === -1) startIndex = 0;
+
+            const codingRna = rnaFull.slice(startIndex);
+            const codingDna = dna.slice(startIndex);
+
+            const usableLen = Math.floor(codingRna.length / 3) * 3;
+            if (usableLen < 3) {
+                resultEl.innerHTML = `
+                <p style="color:#facc15; font-size:13px;">
+                    Sequence is too short after start codon for translation.
+                </p>`;
+                return;
+            }
+
+            const rna = codingRna.slice(0, usableLen);
+            const dnaUsed = codingDna.slice(0, usableLen);
+
+            const dnaCodons = splitIntoCodons(dnaUsed);
+            const rnaCodons = splitIntoCodons(rna);
+            const protein = rnaToProtein(rna);
+
+            const dnaHtml = dnaCodons
+                .map((c, i) => buildCodonBlock(c, i, "dna"))
+                .join("");
+
+            const rnaHtml = rnaCodons
+                .map((c, i) => buildCodonBlock(c, i, "mrna"))
+                .join("");
+
+            const aaDelayOffset = rnaCodons.length * 0.18 + 0.25;
+            const proteinHtml = protein
+                .split("")
+                .map((aa, i) => buildAaBox(aa, i, aaDelayOffset))
+                .join("");
+
+            resultEl.innerHTML = `
+            <div class="translation-card">
+                <div class="translation-header">
+                    <span class="translation-title">Translation Result</span>
+                    <span class="translation-meta">
+                        ${dnaUsed.length} bp DNA → ${rnaCodons.length} codon(s) → ${protein.length} aa
+                    </span>
+                </div>
+
+                <div class="translation-lane">
+                    <div class="lane-row">
+                        <span class="lane-label">DNA (5' → 3')</span>
+                        <div class="lane-seq">${dnaHtml}</div>
+                    </div>
+
+                    <div class="lane-arrow">↓ transcription</div>
+
+                    <div class="lane-row">
+                        <span class="lane-label">mRNA</span>
+                        <div class="lane-seq">${rnaHtml}</div>
+                    </div>
+
+                    <div class="lane-arrow">↓ translation</div>
+
+                    <div class="lane-row">
+                        <span class="lane-label">Protein</span>
+                        <div class="lane-protein">${proteinHtml}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        }
+
+        // --------------------------
+        // DOM wiring
+        // --------------------------
+        document.addEventListener("DOMContentLoaded", () => {
+            const seqInput = document.getElementById("sequenceToolsInput");
+            if (seqInput) {
+                updateCompositionPanel(seqInput.value);
+                seqInput.addEventListener("input", () => {
+                    updateCompositionPanel(seqInput.value);
+                });
+            }
+
+            const gcBtn = document.getElementById("gcContentBtn");
+            if (gcBtn) gcBtn.addEventListener("click", runGc);
+
+            const rcBtn = document.getElementById("reverseComplementBtn");
+            if (rcBtn) rcBtn.addEventListener("click", runRc);
+
+            const motifBtn = document.getElementById("motifSearchBtn");
+            if (motifBtn) motifBtn.addEventListener("click", runMotif);
+
+            const codonBtn = document.getElementById("codonBtn");
+            if (codonBtn) codonBtn.addEventListener("click", runCodonAnalysis);
+
+            const trBtn = document.getElementById("translationBtn");
+            if (trBtn) trBtn.addEventListener("click", runTranslation);
+        });
+
+        document.addEventListener("click", async (e) => {
+            const toggle = e.target.closest(".js-toggle");
+            const copyBtn = e.target.closest(".js-copy");
+            const downBtn = e.target.closest(".js-download");
+            const distBtn = e.target.closest(".js-distance");
+            const globBtn = e.target.closest(".js-global");
+            const locBtn = e.target.closest(".js-local");
+
+            const any = toggle || copyBtn || downBtn || distBtn || globBtn || locBtn;
+            if (!any) return;
+
+            const idx = Number(any.dataset.idx);
+            const r = lastResults[idx];
+            if (!r) return;
+
+            // SHOW DETAILS
+            if (toggle) {
+                if (expanded.has(idx)) expanded.delete(idx);
+                else expanded.add(idx);
+                renderResults(lastResults);
+                return;
+            }
+
+            // COPY FASTA
+            if (copyBtn) {
+                const header = r.description || r.matched_record_id || "record";
+                const fasta = makeFasta(header, expanded.has(idx) ? r.match_full : r.match_preview);
+                await navigator.clipboard.writeText(fasta);
+                return;
+            }
+
+            // DOWNLOAD FASTA
+            if (downBtn) {
+                const header = (r.matched_record_id || "record").replace(/[^\w.-]/g, "_");
+                const fasta = makeFasta(r.description || r.matched_record_id, r.match_full);
+                const blob = new Blob([fasta], { type: "text/plain" });
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = `${header}.fasta`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                return;
+            }
+
+            // DISTANCE / ALIGN
+            const seq1 = (lastQuery || "").trim();
+            const seq2 = (r.match_full || "").trim();
+            if (!seq1 || !seq2) return;
+
+            const panel = document.getElementById(`panel-${idx}`);
+            const out = document.getElementById(`out-${idx}`);
+            panel.style.display = "block";
+            out.textContent = "Loading...";
+
+            try {
+                if (distBtn) {
+                    // basit distance: aynı uzunlukta kıyas
+                    const a = seq1;
+                    const b = seq2.slice(0, a.length);
+                    let d = 0;
+                    for (let i = 0; i < Math.min(a.length, b.length); i++) if (a[i] !== b[i]) d++;
+                    out.textContent = `Distance (Hamming-like): ${d}\nLength compared: ${Math.min(a.length, b.length)}`;
+                    return;
+                }
+
+                if (globBtn) {
+                    const resp = await fetch("http://127.0.0.1:8000/align-global", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ seq1, seq2 })
+                    });
+                    const data = await resp.json();
+                    out.textContent = data.alignment || data.error || "No output";
+                    return;
+                }
+
+                if (locBtn) {
+                    const resp = await fetch("http://127.0.0.1:8000/align-local", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ seq1, seq2 })
+                    });
+                    const data = await resp.json();
+                    out.textContent = data.alignment || data.error || "No output";
+                    return;
+                }
+            } catch (err) {
+                console.error(err);
+                out.textContent = "Request failed. Check console / backend logs.";
+            }
+        });
+
+    </script>
+</body>
+
+</html>
