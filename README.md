@@ -16,3 +16,8 @@ and outputs structured results.
 - Sequence similarity calculation
 - Algorithm-based matching logic
 - Modular and extensible design
+
+## Technologies Used
+- Python
+- Algorithmic sequence matching
+- Data analysis & visualization
