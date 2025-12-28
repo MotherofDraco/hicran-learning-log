@@ -1,4 +1,4 @@
-# sequence-similarity-analyzer
+# Sequence-Similarity-Analyzer
 # DNA Similarity Analysis Tool
 
 This project is an analytical tool designed to compare DNA sequences
