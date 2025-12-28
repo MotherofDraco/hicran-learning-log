@@ -27,3 +27,8 @@ and outputs structured results.
 - Algorithmic thinking
 - Data-driven decision making
 - Working with structured data
+
+## How to Run
+1. Clone the repository
+2. Install dependencies
+3. Run the application
