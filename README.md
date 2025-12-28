@@ -11,3 +11,8 @@ mismatches, and patterns within raw data.
 ## Solution
 This tool processes sequence data, applies similarity algorithms,
 and outputs structured results.
+
+## Key Features
+- Sequence similarity calculation
+- Algorithm-based matching logic
+- Modular and extensible design
